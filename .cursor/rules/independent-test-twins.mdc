@@ -1,0 +1,25 @@
+---
+description: Require independent shell and pytest behavior-test twins
+alwaysApply: true
+---
+
+# Independent Test Twins
+
+Every new behavior change or defect fix must have parallel public-seam coverage
+in both a shell test under `test/*.sh` and a pytest test under `test/pytest/`.
+
+The two tests must be independent:
+
+- Neither test may call, source, import, read, inspect, grep, execute, or otherwise
+  reference its counterpart.
+- Neither test may derive fixtures, expected values, assertions, or results from
+  its counterpart.
+- Shared production interfaces and shared harness infrastructure are allowed;
+  the shell and Python test files themselves are not shared infrastructure.
+- Documentation may identify the two files as counterparts. This is the only
+  allowed cross-reference.
+- Each test must remain runnable and meaningful if its counterpart is deleted.
+
+Use TDD independently for both forms: prove each test red against the unfixed
+tree, green against the fix, then apply a production-code removal or causation
+mutation and prove each test turns red for the intended reason.
