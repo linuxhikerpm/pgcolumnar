@@ -310,4 +310,8 @@ guard_tests 380
 # `guard_tests` was re-derived in the same run and did NOT move: 380. That is the
 # expected answer for a file that needs a cluster, and checking it rather than
 # assuming it is what this file asks for.
-cluster_tests 423
+# 423 -> 424 when test_projection_parallel.py landed: one cluster arm that a
+# covering projection can be a parallel scan. Re-derived by collection on this
+# tree after rebase onto origin/main (17b2c4dd), never by adding one to a
+# number measured on another.
+cluster_tests 424

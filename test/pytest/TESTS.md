@@ -102,6 +102,7 @@ behaviour, the source of that number is named.
 - [54. test_projection_update.py: UPDATE must fan the new row number out to projections](#54-test_projection_updatepy-update-must-fan-the-new-row-number-out-to-projections)
 - [55. test_projection_drop_column.py: DROP COLUMN must not invalidate a projection](#55-test_projection_drop_columnpy-drop-column-must-not-invalidate-a-projection)
 - [56. test_encode_post_codec.py: an encoding must be smaller after the codec](#56-test_encode_post_codecpy-an-encoding-must-be-smaller-after-the-codec)
+- [57. test_projection_parallel.py: a covering projection can be a parallel scan](#57-test_projection_parallelpy-a-covering-projection-can-be-a-parallel-scan)
 
 ## 1. How to read a test in here
 
@@ -4600,6 +4601,7 @@ names match.
 | test | what it asserts |
 | --- | --- |
 | `test_projection_scan_cost` | the table and covering projection exist; the tight and loose plans use that projection; without the GUC they are base columnar scans; every compared scan has a positive run cost; a tight covering projection is cheaper relative to the base than a loose one; the two ratios are not both 0.5; a non-sort-key restriction does not cheapen a covering projection |
+
 ## 52. test_record_names_its_major.py: a record must name its major
 
 #1121. `pgc_record` writes `${PGC_MAJOR:-unknown}` and `PGC_MAJOR` is set inside
@@ -4754,3 +4756,24 @@ The controls are the load-bearing half. Declining every encoding would satisfy
 "never larger than unencoded" and redden nothing, so the repeating column ships
 beside the tail one and asserts that encoding is still chosen where it wins.
 
+## 57. test_projection_parallel.py: a covering projection can be a parallel scan
+
+The covering-projection path was a serial CustomPath (`parallel_aware = false`,
+`parallel_safe = false`) while the parallel base scan was a partial path with
+no projection name. Those cannot both be true of one plan: either Gather wins
+and the projection is dropped, or the serial projection wins and the workers
+are dropped.
+
+The executor already partitions whatever storage `BeginCustomScan` opened (the
+DSM stripe counter is attached to `readState`), so a covering scan can be
+parallel. A partial covering-projection path is now offered.
+
+This file asserts the PLANNER shape and the query's count. Public seam:
+`EXPLAIN` of a covering projection query, plus `count(*)`. The shell twin uses
+`cvppar` / `byik` / 32000 rows / `ik BETWEEN 40 AND 220`; this file uses
+`pcvgath` / `onskey` / 50000 rows / `skey BETWEEN 200 AND 599`. Assertion
+names match.
+
+| test | what it asserts |
+| --- | --- |
+| `test_projection_parallel` | the table and covering projection exist; a serial covering query uses the projection; a parallel base scan is available when the projection is off; a covering projection can be a parallel scan; a parallel covering projection returns the covering rows once |
