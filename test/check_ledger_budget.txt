@@ -135,4 +135,9 @@ suites_not_covered 249
 # projection_parallel rows added, of which five last-red stay never. Re-derived
 # by COUNTING on the merged tree, never by adding the deltas:
 #     awk -F'\t' '$5=="never"' test/check_ledger.tsv | wc -l
-checks_never_observed_red 1412
+# 1412 -> 1414 after three ANALYZE worker-share arms: two last-red stay never
+# (Workers Launched / a rows= line per worker); the share arm was observed red
+# under a first-wins claimer. Seeded from one run per major (15-19) in a single
+# merge, then the mutation FAIL. Uniform 15;16;17;18;19. Re-derived by COUNTING:
+#     awk -F'\t' '$5=="never"' test/check_ledger.tsv | wc -l
+checks_never_observed_red 1414
